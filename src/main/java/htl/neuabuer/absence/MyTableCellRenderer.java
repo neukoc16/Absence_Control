@@ -1,6 +1,8 @@
 package htl.neuabuer.absence;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -18,6 +20,13 @@ public class MyTableCellRenderer implements TableCellRenderer {
         Student s = (Student) value;
         JLabel label = new JLabel();
         label.setOpaque(true);
+
+        if (s.getExit().isBefore(LocalDateTime.now())) {
+            label.setBackground(Color.red);
+            label.setForeground(Color.white);
+        } else {
+            label.setBackground(Color.green);
+        }
 
         switch (column) {
             case 0:

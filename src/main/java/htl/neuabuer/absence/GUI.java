@@ -16,14 +16,25 @@ import java.util.logging.Logger;
 public class GUI extends javax.swing.JFrame {
 
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-    private Connection con;
     private final String atr[] = new String[7];
+    private final MyTableModel model = new MyTableModel();
+    private Connection con;
 
     /**
      * Creates new form GUI
      */
     public GUI() {
         initComponents();
+        tbstudents.setModel(model);
+        tbstudents.setDefaultRenderer(Object.class, new MyTableCellRenderer());
+
+        try {
+            con = DriverManager.getConnection(
+                    "jdbc:postgresql://localhost:5432/Students", "postgres", "postgres");
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         atr[0] = "studentid";
         atr[1] = "firstname";
         atr[2] = "lastname";
@@ -37,9 +48,19 @@ public class GUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        pmmenu = new javax.swing.JPopupMenu();
+        miexit = new javax.swing.JMenuItem();
         jScrollPane1 = new javax.swing.JScrollPane();
         tbstudents = new javax.swing.JTable();
         btload = new javax.swing.JButton();
+
+        miexit.setText("Absent");
+        miexit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miexitActionPerformed(evt);
+            }
+        });
+        pmmenu.add(miexit);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -54,6 +75,7 @@ public class GUI extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tbstudents.setComponentPopupMenu(pmmenu);
         jScrollPane1.setViewportView(tbstudents);
 
         btload.setText("Load");
@@ -69,32 +91,29 @@ public class GUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
-                    .addComponent(btload, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(64, 64, 64)
+                .addComponent(btload, javax.swing.GroupLayout.PREFERRED_SIZE, 299, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(100, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 312, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btload)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(88, 88, 88)
+                        .addComponent(btload, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(166, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btloadActionPerformed
-
-        try {
-            con = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/Students", "postgres", "postgres");
-        } catch (SQLException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        model.clear();
 
         try (java.sql.Statement stat = con.createStatement()) {
             String sqlString = "SELECT * FROM student WHERE studentid=1";
@@ -113,22 +132,32 @@ public class GUI extends javax.swing.JFrame {
                         LocalDateTime.parse(name[4], dtf),
                         LocalDateTime.parse(name[5], dtf),
                         Integer.parseInt(name[6]));
-                System.out.println(s.toString());
+                model.add(s);
             }
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btloadActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+    private void miexitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miexitActionPerformed
+        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), tbstudents.getSelectedColumn());
+        s.setExit(LocalDateTime.now());
+        tbstudents.repaint();
+
+        System.out.println(s.toString());
+
+        try (java.sql.Statement stat = con.createStatement()) {
+            String sqlString = String.format("UPDATE student "
+                    + "SET exit = %s, entry=%s"
+                    + "WHERE studentid=%d", s.getExit().format(dtf), s.getEntry().format(dtf), s.getID());
+            ResultSet rs = stat.executeQuery(sqlString);
+            while (rs.next()) {
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_miexitActionPerformed
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -139,11 +168,6 @@ public class GUI extends javax.swing.JFrame {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(GUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
             new GUI().setVisible(true);
         });
@@ -152,6 +176,8 @@ public class GUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btload;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JMenuItem miexit;
+    private javax.swing.JPopupMenu pmmenu;
     private javax.swing.JTable tbstudents;
     // End of variables declaration//GEN-END:variables
 }
