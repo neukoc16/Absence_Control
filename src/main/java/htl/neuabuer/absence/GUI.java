@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  * @author Konstantin
  */
 public class GUI extends javax.swing.JFrame {
-
+    
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private final String atr[] = new String[7];
     private final MyTableModel model = new MyTableModel();
@@ -27,14 +27,14 @@ public class GUI extends javax.swing.JFrame {
         initComponents();
         tbstudents.setModel(model);
         tbstudents.setDefaultRenderer(Object.class, new MyTableCellRenderer());
-
+        
         try {
             con = DriverManager.getConnection(
                     "jdbc:postgresql://localhost:5432/Students", "postgres", "postgres");
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
         atr[0] = "studentid";
         atr[1] = "firstname";
         atr[2] = "lastname";
@@ -43,13 +43,15 @@ public class GUI extends javax.swing.JFrame {
         atr[5] = "exit";
         atr[6] = "absencecounter";
     }
-
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         pmmenu = new javax.swing.JPopupMenu();
         miexit = new javax.swing.JMenuItem();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
         tbstudents = new javax.swing.JTable();
         btload = new javax.swing.JButton();
@@ -61,6 +63,10 @@ public class GUI extends javax.swing.JFrame {
             }
         });
         pmmenu.add(miexit);
+
+        jTextArea1.setColumns(20);
+        jTextArea1.setRows(5);
+        jScrollPane2.setViewportView(jTextArea1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -91,26 +97,40 @@ public class GUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(64, 64, 64)
-                .addComponent(btload, javax.swing.GroupLayout.PREFERRED_SIZE, 299, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(100, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 767, Short.MAX_VALUE)
+                    .addComponent(btload, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(88, 88, 88)
-                        .addComponent(btload, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(166, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btload)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void miexitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miexitActionPerformed
+        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), tbstudents.getSelectedColumn());
+        s.setExit(LocalDateTime.now());
+        tbstudents.repaint();
+        
+        System.out.println(s.toString());
+        
+        try (java.sql.Statement stat = con.createStatement()) {
+            String sqlString
+                    = "UPDATE student SET exit = '" + s.getExit().format(dtf) + "', entry= '" + s.getEntry().format(dtf)
+                    + "' WHERE studentid=" + s.getID();
+            stat.execute(sqlString);
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_miexitActionPerformed
 
     private void btloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btloadActionPerformed
         model.clear();
@@ -125,38 +145,19 @@ public class GUI extends javax.swing.JFrame {
                 }
 
                 Student s = new Student(
-                        Integer.parseInt(name[0]),
-                        name[1],
-                        name[2],
-                        name[3],
-                        LocalDateTime.parse(name[4], dtf),
-                        LocalDateTime.parse(name[5], dtf),
-                        Integer.parseInt(name[6]));
+                    Integer.parseInt(name[0]),
+                    name[1],
+                    name[2],
+                    name[3],
+                    LocalDateTime.parse(name[4], dtf),
+                    LocalDateTime.parse(name[5], dtf),
+                    Integer.parseInt(name[6]));
                 model.add(s);
             }
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btloadActionPerformed
-
-    private void miexitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miexitActionPerformed
-        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), tbstudents.getSelectedColumn());
-        s.setExit(LocalDateTime.now());
-        tbstudents.repaint();
-
-        System.out.println(s.toString());
-
-        try (java.sql.Statement stat = con.createStatement()) {
-            String sqlString = String.format("UPDATE student "
-                    + "SET exit = %s, entry=%s"
-                    + "WHERE studentid=%d", s.getExit().format(dtf), s.getEntry().format(dtf), s.getID());
-            ResultSet rs = stat.executeQuery(sqlString);
-            while (rs.next()) {
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_miexitActionPerformed
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -176,6 +177,8 @@ public class GUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btload;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTextArea jTextArea1;
     private javax.swing.JMenuItem miexit;
     private javax.swing.JPopupMenu pmmenu;
     private javax.swing.JTable tbstudents;
