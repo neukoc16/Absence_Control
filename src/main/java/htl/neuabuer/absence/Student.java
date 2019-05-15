@@ -1,7 +1,13 @@
 package htl.neuabuer.absence;
 
-import java.time.LocalDateTime;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -13,19 +19,17 @@ public class Student {
     private String FirstName;
     private String LastName;
     private String Class;
-    private LocalDateTime entry;
-    private LocalDateTime exit;
-    private int AbsenceCounter;
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
-    public Student(int ID, String FirstName, String LastName, String Class, LocalDateTime entry, LocalDateTime exit, int AbsenceCounter) {
+    public Student(int ID, String FirstName, String LastName, String Class) {
         this.ID = ID;
         this.FirstName = FirstName;
         this.LastName = LastName;
         this.Class = Class;
-        this.entry = entry;
-        this.exit = exit;
-        this.AbsenceCounter = AbsenceCounter;
+
+//        if (!existsToday()) {
+//            createToday();
+//        }
     }
 
     public int getID() {
@@ -44,16 +48,11 @@ public class Student {
         return Class;
     }
 
-    public LocalDateTime getEntry() {
-        return entry;
-    }
-
-    public LocalDateTime getExit() {
-        return exit;
-    }
-
-    public int getAbsenceCounter() {
-        return AbsenceCounter;
+    public int getAbsenceCounter() throws SQLException {
+        String sqlString = "SELECT SUM(end-entry) FROM student_absencess WHERE studentid = " + ID;
+        Statement s = GUI.getCon().createStatement();
+        ResultSet rs = s.executeQuery(sqlString);
+        return rs.getInt(1);
     }
 
     public void setID(int ID) {
@@ -72,22 +71,41 @@ public class Student {
         this.Class = Class;
     }
 
-    public void setEntry(LocalDateTime entry) {
-        this.entry = entry;
+    public void setEntry(LocalTime entry) throws SQLException {
+        String sqlString = "UPDATE student_absencess SET entry = '" + entry.format(dtf) + "' WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        Statement s = GUI.getCon().createStatement();
+        ResultSet rs = s.executeQuery(sqlString);
+        //return rs.getTime(1).toLocalTime();
     }
 
-    public void setExit(LocalDateTime exit) {
-        this.exit = exit;
+    public void setExit(LocalTime exit) throws SQLException {
+        String sqlString = "UPDATE student_absencess SET exit = '" + exit.format(dtf) + "' WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        Statement s = GUI.getCon().createStatement();
+        ResultSet rs = s.executeQuery(sqlString);
+        //return rs.getTime(1).toLocalTime();
     }
 
-    public void setAbsenceCounter(int AbsenceCounter) {
-        this.AbsenceCounter = AbsenceCounter;
+    public LocalTime getEntry() throws SQLException {
+        String sqlString = "SELECT entry FROM student_absencess WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        Statement s = GUI.getCon().createStatement();
+        ResultSet result = s.executeQuery(sqlString);
+        return result.getTime(1).toLocalTime();
+    }
+
+    public LocalTime getExit() throws SQLException {
+        String sqlString = "SELECT exit FROM student_absencess WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        Statement s = GUI.getCon().createStatement();
+        ResultSet result = s.executeQuery(sqlString);
+        return result.getTime(1).toLocalTime();
     }
 
     @Override
     public String toString() {
-        return String.format("%d %s %s %s %s %s %d", ID, FirstName, LastName, Class,
-                entry.format(dtf),
-                exit.format(dtf), AbsenceCounter);
+        try {
+            return String.format("%d %s %s %s %d", ID, FirstName, LastName, Class, this.getAbsenceCounter());
+        } catch (SQLException ex) {
+            Logger.getLogger(Student.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

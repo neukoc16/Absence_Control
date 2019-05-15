@@ -2,8 +2,11 @@ package htl.neuabuer.absence;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.time.LocalDateTime;
+import java.sql.SQLException;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
@@ -21,11 +24,19 @@ public class MyTableCellRenderer implements TableCellRenderer {
         JLabel label = new JLabel();
         label.setOpaque(true);
 
-        if (s.getExit().isBefore(LocalDateTime.now())) {
-            label.setBackground(Color.red);
-            label.setForeground(Color.white);
-        } else {
-            label.setBackground(Color.green);
+        try {
+            if (s.getExit().isBefore(LocalTime.now())) {
+                label.setBackground(Color.red);
+                label.setForeground(Color.white);
+            } else {
+                label.setBackground(Color.green);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (isSelected) {
+            label.setBackground(Color.LIGHT_GRAY);
         }
 
         switch (column) {
@@ -41,17 +52,31 @@ public class MyTableCellRenderer implements TableCellRenderer {
             case 3:
                 label.setText(s.getClassName());
                 break;
-            case 4:
-                label.setText(s.getEntry().format(dtf));
-                break;
-            case 5:
-                label.setText(s.getExit().format(dtf));
-                break;
-            case 6:
-                label.setText(s.getAbsenceCounter() + "");
-                break;
+//            case 4: {
+//                try {
+//                    label.setText(s.getEntry().format(dtf));
+//                } catch (SQLException ex) {
+//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            break;
+//            case 5: {
+//                try {
+//                    label.setText(s.getExit().format(dtf));
+//                } catch (SQLException ex) {
+//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            break;
+            case 6: {
+                try {
+                    label.setText(s.getAbsenceCounter() + "");
+                } catch (SQLException ex) {
+                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            break;
         }
         return label;
     }
-
 }
