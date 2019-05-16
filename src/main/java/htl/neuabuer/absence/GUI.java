@@ -4,13 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -20,12 +18,9 @@ public class GUI extends javax.swing.JFrame {
 
     private static Connection con;
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-    private final DateTimeFormatter weekdtf = DateTimeFormatter.ofPattern("E");
     private final String atr[] = new String[4];
-    private final LocalTime end[] = new LocalTime[5];
+    private final Runnable run;
     private final MyTableModel model = new MyTableModel();
-    private DayOfWeek dow;
-    private final int today;
     private int count;
 
     static {
@@ -40,6 +35,21 @@ public class GUI extends javax.swing.JFrame {
     public GUI() {
         initComponents();
 
+        run = () -> {
+            while (true) {
+                load();
+                tbstudents.repaint();
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+
+        Thread thread = new Thread(run);
+        thread.start();
+
         tbstudents.setModel(model);
         tbstudents.setDefaultRenderer(Object.class, new MyTableCellRenderer());
 
@@ -47,18 +57,6 @@ public class GUI extends javax.swing.JFrame {
         atr[1] = "firstname";
         atr[2] = "lastname";
         atr[3] = "class";
-//        atr[4] = "entry";
-//        atr[5] = "exit";
-//        atr[6] = "absencecounter";
-
-        end[0] = LocalTime.of(16, 20);
-        end[1] = LocalTime.of(16, 20);
-        end[2] = LocalTime.of(13, 15);
-        end[3] = LocalTime.of(16, 20);
-        end[4] = LocalTime.of(13, 15);
-
-        dow = LocalDate.now().getDayOfWeek();
-        today = dow.getValue();
     }
 
     public static Connection getCon() {
@@ -106,19 +104,51 @@ public class GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         pmmenu = new javax.swing.JPopupMenu();
+        mientry = new javax.swing.JMenuItem();
         miexit = new javax.swing.JMenuItem();
+        menabs = new javax.swing.JMenu();
+        miabsall = new javax.swing.JMenuItem();
+        miabstoday = new javax.swing.JMenuItem();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
         tbstudents = new javax.swing.JTable();
 
-        miexit.setText("Absent");
+        mientry.setText("Entry");
+        mientry.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mientryActionPerformed(evt);
+            }
+        });
+        pmmenu.add(mientry);
+
+        miexit.setText("Exit");
         miexit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miexitActionPerformed(evt);
             }
         });
         pmmenu.add(miexit);
+
+        menabs.setText("Absence");
+
+        miabsall.setText("show ths year's Absence");
+        miabsall.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miabsallActionPerformed(evt);
+            }
+        });
+        menabs.add(miabsall);
+
+        miabstoday.setText("show today's Absence");
+        miabstoday.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miabstodayActionPerformed(evt);
+            }
+        });
+        menabs.add(miabstoday);
+
+        pmmenu.add(menabs);
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -169,22 +199,11 @@ public class GUI extends javax.swing.JFrame {
         Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), 1);
 
         try {
-            s.setExit(LocalTime.now());
+            s.setExit(LocalDateTime.now());
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        try (java.sql.Statement stat = con.createStatement()) {
-            String sqlString
-                    = "INSERT INTO log (studentid, cdate, entry, exit, endt)"
-                    + " VALUES (" + s.getID() + ", " + LocalDate.now().format(DateTimeFormatter.ISO_DATE)
-                    + ", " + s.getEntry().format(DateTimeFormatter.ISO_DATE_TIME)
-                    + ", " + s.getExit().format(DateTimeFormatter.ISO_DATE_TIME)
-                    + ", " + end[today] + ")";
-            stat.execute(sqlString);
-        } catch (SQLException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        model.fireTableDataChanged();
 
         load();
         tbstudents.repaint();
@@ -193,6 +212,40 @@ public class GUI extends javax.swing.JFrame {
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         load();
     }//GEN-LAST:event_formWindowOpened
+
+    private void miabsallActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miabsallActionPerformed
+        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), 1);
+
+        try {
+            JOptionPane.showMessageDialog(null, "All Abence-Hours in this year: " + s.getAbsenceCounterAll());
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_miabsallActionPerformed
+
+    private void mientryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mientryActionPerformed
+        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), 1);
+
+        try {
+            s.setEntry(LocalDateTime.now());
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        model.fireTableDataChanged();
+
+        load();
+        tbstudents.repaint();
+    }//GEN-LAST:event_mientryActionPerformed
+
+    private void miabstodayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miabstodayActionPerformed
+        Student s = (Student) model.getValueAt(tbstudents.getSelectedRow(), 1);
+
+        try {
+            JOptionPane.showMessageDialog(null, "Today's Absence-Hours: " + s.getAbsenceCounterToday());
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_miabstodayActionPerformed
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -214,6 +267,10 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JMenu menabs;
+    private javax.swing.JMenuItem miabsall;
+    private javax.swing.JMenuItem miabstoday;
+    private javax.swing.JMenuItem mientry;
     private javax.swing.JMenuItem miexit;
     private javax.swing.JPopupMenu pmmenu;
     private javax.swing.JTable tbstudents;

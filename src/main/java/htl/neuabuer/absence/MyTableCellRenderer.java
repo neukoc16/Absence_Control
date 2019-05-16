@@ -24,15 +24,21 @@ public class MyTableCellRenderer implements TableCellRenderer {
         JLabel label = new JLabel();
         label.setOpaque(true);
 
-        try {
-            if (s.getExit().isBefore(LocalTime.now())) {
-                label.setBackground(Color.red);
-                label.setForeground(Color.white);
-            } else {
-                label.setBackground(Color.green);
+        if (LocalTime.now().isAfter(s.getEnd(s.getToday()).toLocalTime()) || LocalTime.now().isBefore(LocalTime.of(8, 0))) {
+            label.setBackground(Color.black);
+            label.setForeground(Color.white);
+        } else {
+            try {
+                if (LocalTime.now().isBefore(s.getExit().toLocalTime())) {
+                    label.setBackground(Color.green);
+                    label.setForeground(Color.black);
+                } else {
+                    label.setBackground(Color.red);
+                    label.setForeground(Color.white);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         if (isSelected) {
@@ -70,7 +76,7 @@ public class MyTableCellRenderer implements TableCellRenderer {
 //            break;
 //            case 6: {
 //                try {
-//                    label.setText(s.getAbsenceCounter() + "");
+//                    label.setText(s.getAbsenceCounterAll() + "");
 //                } catch (SQLException ex) {
 //                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
 //                }
