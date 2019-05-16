@@ -10,7 +10,7 @@ import javax.swing.table.AbstractTableModel;
 public class MyTableModel extends AbstractTableModel {
 
     private static final String[] colNames
-            = {"ID", "First-Name", "Last-Name", "Class", "Entry-Time", "Exit-Time", "Absence-Counter",};
+            = {"ID", "First Name", "Last Name", "Class"};
     private final ArrayList<Student> students = new ArrayList<>();
 
     public void add(Student s) {

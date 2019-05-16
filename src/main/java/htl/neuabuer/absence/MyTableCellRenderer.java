@@ -68,14 +68,14 @@ public class MyTableCellRenderer implements TableCellRenderer {
 //                }
 //            }
 //            break;
-            case 6: {
-                try {
-                    label.setText(s.getAbsenceCounter() + "");
-                } catch (SQLException ex) {
-                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            break;
+//            case 6: {
+//                try {
+//                    label.setText(s.getAbsenceCounter() + "");
+//                } catch (SQLException ex) {
+//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            break;
         }
         return label;
     }

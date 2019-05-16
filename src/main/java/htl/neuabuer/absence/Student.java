@@ -15,10 +15,10 @@ import java.util.logging.Logger;
  */
 public class Student {
 
-    private int ID;
-    private String FirstName;
-    private String LastName;
-    private String Class;
+    private final int ID;
+    private final String FirstName;
+    private final String LastName;
+    private final String Class;
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
     public Student(int ID, String FirstName, String LastName, String Class) {
@@ -49,54 +49,48 @@ public class Student {
     }
 
     public int getAbsenceCounter() throws SQLException {
-        String sqlString = "SELECT SUM(end-entry) FROM student_absencess WHERE studentid = " + ID;
+        String sqlString = "SELECT SUM(end-entry) FROM log WHERE studentid = " + ID;
         Statement s = GUI.getCon().createStatement();
         ResultSet rs = s.executeQuery(sqlString);
-        return rs.getInt(1);
-    }
-
-    public void setID(int ID) {
-        this.ID = ID;
-    }
-
-    public void setFirstName(String FirstName) {
-        this.FirstName = FirstName;
-    }
-
-    public void setLastName(String LastName) {
-        this.LastName = LastName;
-    }
-
-    public void setClass(String Class) {
-        this.Class = Class;
+        if (rs.next()) {
+            return rs.getInt(1);
+        }
+        return 0;
     }
 
     public void setEntry(LocalTime entry) throws SQLException {
-        String sqlString = "UPDATE student_absencess SET entry = '" + entry.format(dtf) + "' WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        String sqlString = "UPDATE log SET entry = '" + entry.format(dtf) + "' WHERE studentid = " + ID + " AND cdate = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
         Statement s = GUI.getCon().createStatement();
         ResultSet rs = s.executeQuery(sqlString);
-        //return rs.getTime(1).toLocalTime();
+        rs.next();
     }
 
     public void setExit(LocalTime exit) throws SQLException {
-        String sqlString = "UPDATE student_absencess SET exit = '" + exit.format(dtf) + "' WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        String sqlString = "UPDATE log SET exit = '" + exit.format(dtf) + "' WHERE studentid = " + ID + " AND cdate = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
         Statement s = GUI.getCon().createStatement();
         ResultSet rs = s.executeQuery(sqlString);
-        //return rs.getTime(1).toLocalTime();
+        rs.next();
     }
 
     public LocalTime getEntry() throws SQLException {
-        String sqlString = "SELECT entry FROM student_absencess WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        String sqlString = "SELECT entry FROM log WHERE studentid = " + ID + " AND cdate = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
         Statement s = GUI.getCon().createStatement();
-        ResultSet result = s.executeQuery(sqlString);
-        return result.getTime(1).toLocalTime();
+        ResultSet rs = s.executeQuery(sqlString);
+        if (rs.next()) {
+            return rs.getTime(1).toLocalTime();
+        }
+        return null;
     }
 
     public LocalTime getExit() throws SQLException {
-        String sqlString = "SELECT exit FROM student_absencess WHERE studentid = " + ID + " AND date = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
+        String sqlString = "SELECT exit FROM log WHERE studentid = " + ID + " AND cdate = '" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "'";
         Statement s = GUI.getCon().createStatement();
-        ResultSet result = s.executeQuery(sqlString);
-        return result.getTime(1).toLocalTime();
+        ResultSet rs = s.executeQuery(sqlString);
+        if (rs.next()) {
+            return rs.getTime(1).toLocalTime();
+        }
+        return null;
+
     }
 
     @Override

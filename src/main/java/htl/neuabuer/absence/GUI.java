@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
@@ -17,9 +20,12 @@ public class GUI extends javax.swing.JFrame {
 
     private static Connection con;
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-    private final String atr[] = new String[7];
+    private final DateTimeFormatter weekdtf = DateTimeFormatter.ofPattern("E");
+    private final String atr[] = new String[4];
     private final LocalTime end[] = new LocalTime[5];
     private final MyTableModel model = new MyTableModel();
+    private DayOfWeek dow;
+    private final int today;
     private int count;
 
     static {
@@ -37,19 +43,22 @@ public class GUI extends javax.swing.JFrame {
         tbstudents.setModel(model);
         tbstudents.setDefaultRenderer(Object.class, new MyTableCellRenderer());
 
-        atr[0] = "studentid";
+        atr[0] = "id";
         atr[1] = "firstname";
         atr[2] = "lastname";
         atr[3] = "class";
-        atr[4] = "entry";
-        atr[5] = "exit";
-        atr[6] = "absencecounter";
+//        atr[4] = "entry";
+//        atr[5] = "exit";
+//        atr[6] = "absencecounter";
 
         end[0] = LocalTime.of(16, 20);
         end[1] = LocalTime.of(16, 20);
         end[2] = LocalTime.of(13, 15);
         end[3] = LocalTime.of(16, 20);
         end[4] = LocalTime.of(13, 15);
+
+        dow = LocalDate.now().getDayOfWeek();
+        today = dow.getValue();
     }
 
     public static Connection getCon() {
@@ -70,11 +79,11 @@ public class GUI extends javax.swing.JFrame {
 
         for (int i = 1; i < count + 1; i++) {
             try (java.sql.Statement stat = con.createStatement()) {
-                String sqlString = "SELECT * FROM student WHERE studentid=" + i;
+                String sqlString = "SELECT * FROM student WHERE id=" + i;
                 ResultSet rs = stat.executeQuery(sqlString);
 
                 while (rs.next()) {
-                    String name[] = new String[7];
+                    String name[] = new String[4];
                     for (int j = 0; j < name.length; j++) {
                         name[j] = rs.getString(atr[j]);
                     }
@@ -167,8 +176,11 @@ public class GUI extends javax.swing.JFrame {
 
         try (java.sql.Statement stat = con.createStatement()) {
             String sqlString
-                    = "UPDATE student SET exit = '" + s.getExit().format(dtf) + "', entry= '" + s.getEntry().format(dtf)
-                    + "' WHERE studentid=" + s.getID();
+                    = "INSERT INTO log (studentid, cdate, entry, exit, endt)"
+                    + " VALUES (" + s.getID() + ", " + LocalDate.now().format(DateTimeFormatter.ISO_DATE)
+                    + ", " + s.getEntry().format(DateTimeFormatter.ISO_DATE_TIME)
+                    + ", " + s.getExit().format(DateTimeFormatter.ISO_DATE_TIME)
+                    + ", " + end[today] + ")";
             stat.execute(sqlString);
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
