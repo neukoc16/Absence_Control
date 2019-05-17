@@ -11,6 +11,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/*
+ * Student Object with DB-Properties
+ * Timekeeping done here
+ * Absences calculated here
+ */
 public class Student {
 
     private final DateTimeFormatter abstimedtf = DateTimeFormatter.ofPattern("LL dd HH:mm:ss yyyy");

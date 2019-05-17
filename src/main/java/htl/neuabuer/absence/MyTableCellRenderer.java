@@ -11,6 +11,10 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 
+/*
+ * Controling the Look and Feel of the Table in the GUI
+ * Timekeeping used for different colors of rows
+ */
 public class MyTableCellRenderer implements TableCellRenderer {
 
     @Override
