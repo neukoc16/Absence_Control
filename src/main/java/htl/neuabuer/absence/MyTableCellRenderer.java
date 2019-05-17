@@ -11,10 +11,6 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 
-/**
- *
- * @author Konstantin
- */
 public class MyTableCellRenderer implements TableCellRenderer {
 
     @Override
@@ -43,6 +39,7 @@ public class MyTableCellRenderer implements TableCellRenderer {
 
         if (isSelected) {
             label.setBackground(Color.LIGHT_GRAY);
+            label.setForeground(Color.black);
         }
 
         switch (column) {
@@ -58,30 +55,6 @@ public class MyTableCellRenderer implements TableCellRenderer {
             case 3:
                 label.setText(s.getClassName());
                 break;
-//            case 4: {
-//                try {
-//                    label.setText(s.getEntry().format(dtf));
-//                } catch (SQLException ex) {
-//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
-//            break;
-//            case 5: {
-//                try {
-//                    label.setText(s.getExit().format(dtf));
-//                } catch (SQLException ex) {
-//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
-//            break;
-//            case 6: {
-//                try {
-//                    label.setText(s.getAbsenceCounterAll() + "");
-//                } catch (SQLException ex) {
-//                    Logger.getLogger(MyTableCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
-//            break;
         }
         return label;
     }

@@ -4,24 +4,20 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
-/**
- *
- * @author Konstantin
- */
 public class GUI extends javax.swing.JFrame {
 
-    private static Connection con;
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
-    private final String atr[] = new String[4];
-    private final Runnable run;
     private final MyTableModel model = new MyTableModel();
-    private int count;
+    private final String atr[] = new String[4];
+    private static Connection con;
+    private final Runnable run;
 
     static {
         try {
@@ -65,37 +61,24 @@ public class GUI extends javax.swing.JFrame {
 
     public void load() {
         model.clear();
+
         try (java.sql.Statement stat = con.createStatement()) {
-            String sqlString = "SELECT COUNT(*) FROM student";
+            String sqlString = "SELECT * FROM student";
             ResultSet rs = stat.executeQuery(sqlString);
             while (rs.next()) {
-                count = rs.getInt(1);
+                String name[] = new String[4];
+                for (int j = 0; j < name.length; j++) {
+                    name[j] = rs.getString(atr[j]);
+                }
+                Student s = new Student(
+                        Integer.parseInt(name[0]),
+                        name[1],
+                        name[2],
+                        name[3]);
+                model.add(s);
             }
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        for (int i = 1; i < count + 1; i++) {
-            try (java.sql.Statement stat = con.createStatement()) {
-                String sqlString = "SELECT * FROM student WHERE id=" + i;
-                ResultSet rs = stat.executeQuery(sqlString);
-
-                while (rs.next()) {
-                    String name[] = new String[4];
-                    for (int j = 0; j < name.length; j++) {
-                        name[j] = rs.getString(atr[j]);
-                    }
-
-                    Student s = new Student(
-                            Integer.parseInt(name[0]),
-                            name[1],
-                            name[2],
-                            name[3]);
-                    model.add(s);
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
     }
 
@@ -109,6 +92,9 @@ public class GUI extends javax.swing.JFrame {
         menabs = new javax.swing.JMenu();
         miabsall = new javax.swing.JMenuItem();
         miabstoday = new javax.swing.JMenuItem();
+        mireset = new javax.swing.JMenuItem();
+        midelete = new javax.swing.JMenuItem();
+        miadd = new javax.swing.JMenuItem();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -149,6 +135,30 @@ public class GUI extends javax.swing.JFrame {
         menabs.add(miabstoday);
 
         pmmenu.add(menabs);
+
+        mireset.setText("Reset and Close");
+        mireset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miresetActionPerformed(evt);
+            }
+        });
+        pmmenu.add(mireset);
+
+        midelete.setText("Delete Student");
+        midelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mideleteActionPerformed(evt);
+            }
+        });
+        pmmenu.add(midelete);
+
+        miadd.setText("Add Student");
+        miadd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miaddActionPerformed(evt);
+            }
+        });
+        pmmenu.add(miadd);
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -203,6 +213,7 @@ public class GUI extends javax.swing.JFrame {
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         model.fireTableDataChanged();
 
         load();
@@ -231,6 +242,7 @@ public class GUI extends javax.swing.JFrame {
         } catch (SQLException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         model.fireTableDataChanged();
 
         load();
@@ -246,6 +258,71 @@ public class GUI extends javax.swing.JFrame {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_miabstodayActionPerformed
+
+    private void miresetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miresetActionPerformed
+        String sqlString = "DELETE FROM log WHERE 1=1";
+        try {
+            Statement s = con.createStatement();
+            s.executeUpdate(sqlString);
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.exit(0);
+    }//GEN-LAST:event_miresetActionPerformed
+
+    private void mideleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mideleteActionPerformed
+        int idx = tbstudents.getSelectedRow();
+        Student st = (Student) model.getValueAt(idx, 1);
+
+        String sqlStringStudent = "DELETE FROM student WHERE id=" + st.getID();
+        String sqlStringLog = "DELETE FROM log WHERE studentid=" + st.getID();
+
+        model.remove(idx);
+
+        try {
+            Statement s = con.createStatement();
+            s.executeUpdate(sqlStringLog);
+            s.executeUpdate(sqlStringStudent);
+
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        load();
+        tbstudents.repaint();
+    }//GEN-LAST:event_mideleteActionPerformed
+
+    private void miaddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miaddActionPerformed
+        int id = Integer.parseInt(JOptionPane.showInputDialog("Enter ID:"));
+        String firstname = JOptionPane.showInputDialog("Enter First Name:");
+        String lastname = JOptionPane.showInputDialog("Enter Last Name:");
+        String classname = JOptionPane.showInputDialog("Enter class:");
+
+        String sqlString = "INSERT INTO student(id, firstname, lastname, class)"
+                + " VALUES ("
+                + id
+                + ", '" + firstname
+                + "', '" + lastname
+                + "', '" + classname
+                + "')";
+
+        try {
+            Statement s = con.createStatement();
+            s.executeUpdate(sqlString);
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            Student st = new Student(id, firstname, lastname, classname);
+            model.add(st);
+        } catch (SQLException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        load();
+        tbstudents.repaint();
+    }//GEN-LAST:event_miaddActionPerformed
     public static void main(String args[]) {
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -270,8 +347,11 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JMenu menabs;
     private javax.swing.JMenuItem miabsall;
     private javax.swing.JMenuItem miabstoday;
+    private javax.swing.JMenuItem miadd;
+    private javax.swing.JMenuItem midelete;
     private javax.swing.JMenuItem mientry;
     private javax.swing.JMenuItem miexit;
+    private javax.swing.JMenuItem mireset;
     private javax.swing.JPopupMenu pmmenu;
     private javax.swing.JTable tbstudents;
     // End of variables declaration//GEN-END:variables

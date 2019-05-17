@@ -11,20 +11,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Konstantin
- */
 public class Student {
+
+    private final DateTimeFormatter abstimedtf = DateTimeFormatter.ofPattern("LL dd HH:mm:ss yyyy");
+    private final LocalDateTime end[] = new LocalDateTime[5];
+    private final DayOfWeek dow;
+    private final int today;
 
     private final int ID;
     private final String FirstName;
     private final String LastName;
     private final String Class;
-    private final DayOfWeek dow;
-    private final int today;
-    private final LocalDateTime end[] = new LocalDateTime[5];
-    private final DateTimeFormatter abstimedtf = DateTimeFormatter.ofPattern("LL dd HH:mm:ss yyyy");
 
     public Student(int ID, String FirstName, String LastName, String Class) throws SQLException {
         this.ID = ID;
